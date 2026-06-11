@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PYTHON.SYS // Year 7 — Fault-Finding Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#0a2540;--blue-deep:#061829;--cyan:#22d3ee;--cyan-soft:#7dd3fc;--paper:#0d2a47;
+  --line:rgba(125,211,252,.28);--line-strong:rgba(125,211,252,.6);--ink:#dbeafe;--ink-dim:#7fa8cc;
+  --amber:#fbbf24;--lime:#a3e635;--rose:#fb7185;--white:#eaf4ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Space Grotesk',sans-serif;color:var(--ink);background-color:var(--blue);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px),
+    linear-gradient(rgba(125,211,252,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(125,211,252,.07) 1px,transparent 1px);
+  background-size:120px 120px,120px 120px,24px 24px,24px 24px;background-attachment:fixed;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;z-index:1000;display:flex;align-items:stretch;justify-content:space-between;background:rgba(6,24,41,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-strong)}
+.title-block{display:flex;align-items:center;gap:14px;padding:10px 5%;border-right:1px solid var(--line)}
+.stamp{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.62rem;letter-spacing:.18em;color:var(--blue);background:var(--cyan);padding:4px 9px;border-radius:2px;transform:rotate(-3deg)}
+.doc-id{font-family:'Archivo',sans-serif;font-weight:900;font-size:1.05rem;letter-spacing:.04em;color:var(--white)}
+.doc-id small{display:block;font-family:'IBM Plex Mono';font-weight:500;font-size:.6rem;letter-spacing:.22em;color:var(--cyan-soft);margin-top:1px}
+.meter{display:flex;align-items:center;gap:14px;padding:10px 5%}
+.keybtn{font-family:'IBM Plex Mono';font-weight:700;font-size:.7rem;letter-spacing:.1em;color:var(--blue);background:var(--amber);border:none;padding:9px 16px;border-radius:2px;cursor:pointer;transition:.18s;white-space:nowrap}
+.keybtn:hover{transform:translateY(-1px);box-shadow:0 4px 12px -3px var(--amber)}
+.keybtn.on{background:var(--blue-deep);color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.container{max-width:880px;margin:46px auto 90px;padding:0 22px}
+h1{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.05;letter-spacing:-.01em;color:var(--white)}
+h1 .accent{color:var(--cyan)}
+.lead{font-size:1.02rem;color:var(--cyan-soft);max-width:64ch;margin:12px 0 8px;border-left:2px solid var(--line-strong);padding-left:16px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 6px}
+.lg{font-family:'IBM Plex Mono';font-size:.66rem;letter-spacing:.1em;padding:6px 12px;border-radius:99px;border:1px solid var(--line)}
+.lg.fix{color:var(--rose);border-color:rgba(251,113,133,.5);background:rgba(251,113,133,.06)}
+.lg.predict{color:var(--cyan-soft);border-color:var(--line-strong);background:rgba(125,211,252,.05)}
+.item{position:relative;background:var(--paper);border:1px solid var(--line-strong);border-radius:4px;padding:24px 24px 20px;margin:26px 0;box-shadow:0 18px 40px -22px #000}
+.item::before{content:"";position:absolute;inset:6px;border:1px solid var(--line);border-radius:2px;pointer-events:none}
+.corner{position:absolute;width:10px;height:10px;border:2px solid var(--cyan);opacity:.55}
+.corner.tl{top:-1px;left:-1px;border-right:0;border-bottom:0}.corner.tr{top:-1px;right:-1px;border-left:0;border-bottom:0}
+.corner.bl{bottom:-1px;left:-1px;border-right:0;border-top:0}.corner.br{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.item-head{position:relative;z-index:1;display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.item-no{font-family:'IBM Plex Mono';font-weight:700;font-size:.72rem;letter-spacing:.18em;color:var(--blue);background:var(--cyan-soft);padding:5px 11px;border-radius:2px}
+.badge{font-family:'IBM Plex Mono';font-weight:600;font-size:.6rem;letter-spacing:.16em;padding:4px 10px;border-radius:2px;text-transform:uppercase}
+.badge.fix{color:var(--blue);background:var(--rose)}
+.badge.predict{color:var(--blue);background:var(--cyan)}
+.topic{font-family:'IBM Plex Mono';font-size:.64rem;letter-spacing:.16em;color:var(--ink-dim);margin-left:auto}
+.brief{position:relative;z-index:1;font-size:.94rem;margin:10px 0 4px;color:var(--ink)}
+.brief b{color:var(--cyan-soft)}
+.code{position:relative;z-index:1;background:var(--blue-deep);border:1px solid var(--line);border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:.88rem;color:#cfe3f5;margin:12px 0 4px;line-height:1.7;overflow-x:auto}
+.code-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;border-bottom:1px solid var(--line);background:rgba(34,211,238,.05)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ink-dim);opacity:.5}
+.code-name{font-size:.66rem;letter-spacing:.1em;color:var(--ink-dim);margin-left:6px}
+.copy{margin-left:auto;background:transparent;border:1px solid var(--line-strong);color:var(--cyan-soft);font-family:'IBM Plex Mono';font-size:.62rem;letter-spacing:.12em;padding:4px 11px;border-radius:3px;cursor:pointer;transition:.15s}
+.copy:hover{background:var(--cyan);color:var(--blue);border-color:var(--cyan)}
+.code pre{padding:16px 18px;margin:0;white-space:pre;tab-size:4;counter-reset:ln}
+.code .ln{display:block;position:relative;padding-left:34px}
+.code .ln::before{content:counter(ln);counter-increment:ln;position:absolute;left:0;width:22px;text-align:right;color:#3a5a78;font-size:.78rem;user-select:none}
+.comment{color:#5e83a3;font-style:italic}.keyword{color:#c792ea;font-weight:600}.string{color:#c3e88d}
+.number{color:#f78c6c}.function{color:#82aaff}.builtin{color:#ffcb6b}
+.task{position:relative;z-index:1;margin-top:12px;padding:12px 15px 12px 40px;background:rgba(34,211,238,.07);border:1px dashed var(--line-strong);border-radius:3px;font-size:.9rem}
+.task::before{content:"▸";position:absolute;left:15px;top:11px;color:var(--cyan);font-weight:700}
+.task b{color:var(--cyan-soft)}
+.answer{position:relative;z-index:1;display:none;margin-top:12px;border:1px solid var(--amber);border-radius:3px;overflow:hidden;background:rgba(251,191,36,.05)}
+.answer.show{display:block;animation:rise .35s both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.answer-head{font-family:'IBM Plex Mono';font-weight:700;font-size:.64rem;letter-spacing:.18em;color:var(--blue);background:var(--amber);padding:7px 14px;text-transform:uppercase}
+.answer-body{padding:14px 16px;font-size:.9rem}
+.answer-body p{margin-bottom:8px}
+.answer-body .lbl{font-family:'IBM Plex Mono';font-size:.62rem;letter-spacing:.14em;color:var(--amber);display:block;margin-bottom:3px}
+.answer-body code,.q-code{font-family:'IBM Plex Mono';background:var(--blue-deep);border:1px solid var(--line);padding:1px 6px;border-radius:3px;color:#c3e88d;font-size:.84rem}
+.out{font-family:'IBM Plex Mono';font-size:.86rem;color:var(--lime);background:var(--blue-deep);border:1px solid rgba(163,230,53,.3);border-radius:3px;padding:10px 14px;margin-top:4px;white-space:pre-wrap}
+footer{text-align:center;font-family:'IBM Plex Mono';font-size:.66rem;letter-spacing:.14em;color:var(--ink-dim);margin:40px 0 0;padding-top:20px;border-top:1px solid var(--line)}
+@media(max-width:560px){.title-block{border-right:0}.topic{margin-left:0;width:100%}}
+@media print{.copy,.keybtn{display:none}.answer{display:block!important}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <span class="stamp">DEBUG</span>
+    <div class="doc-id">PYTHON.SYS<small>FAULT-FINDING LAB · YR 7</small></div>
+  </div>
+  <div class="meter">
+    <button class="keybtn" id="keytoggle" onclick="toggleKey()">⚷ SHOW ANSWER KEY</button>
+  </div>
+</header>
+
+<div class="container">
+  <h1>Fault-Finding <span class="accent">Lab</span></h1>
+  <p class="lead">Five units on the bench. Some are <b>broken</b> — find the fault and repair it in Thonny. Some <b>work fine</b> — your job is to predict the exact output before you run it. Scope: lists, tuples, sets, dictionaries, functions, conditionals and loops.</p>
+  <div class="legend">
+    <span class="lg fix">◆ FIX THE BUG — script is broken</span>
+    <span class="lg predict">◆ PREDICT OUTPUT — script works</span>
+  </div>
+
+  <!-- ITEM 1 -->
+  <div class="item">
+    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+    <div class="item-head"><span class="item-no">UNIT 01</span><span class="badge fix">Fix the bug</span><span class="topic">TUPLE vs LIST</span></div>
+    <p class="brief">A teacher wants to update the first score in a leaderboard. Running this crashes with a red error.</p>
+    <div class="code">
+      <div class="code-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="code-name">unit01_leaderboard.py</span><button class="copy" onclick="copyCode('u1')">⧉ COPY</button></div>
+<pre id="u1"><span class="ln"><span class="comment"># Update the top score after a re-mark</span></span><span class="ln">scores = (<span class="number">90</span>, <span class="number">85</span>, <span class="number">70</span>)</span><span class="ln">scores[<span class="number">0</span>] = <span class="number">100</span></span><span class="ln"><span class="builtin">print</span>(scores)</span></pre>
+    </div>
+    <div class="task"><b>Your task:</b> Read the error message. Why won't the value change? Fix the script so the output becomes <span class="q-code">[100, 85, 70]</span>.</div>
+    <div class="answer" id="ans1">
+      <div class="answer-head">⚷ Answer Key · Unit 01</div>
+      <div class="answer-body">
+        <p><span class="lbl">THE FAULT</span><code>scores</code> is built with round brackets, making it a <b>tuple</b> — which is locked. Line 3 tries to change slot 0, but tuples don't support item assignment.</p>
+        <p><span class="lbl">ERROR SHOWN</span><code>TypeError: 'tuple' object does not support item assignment</code></p>
+        <p><span class="lbl">THE FIX</span>Change the round brackets to square brackets so it's a list: <code>scores = [90, 85, 70]</code></p>
+        <p><span class="lbl">CORRECT OUTPUT</span></p>
+        <div class="out">[100, 85, 70]</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM 2 -->
+  <div class="item">
+    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+    <div class="item-head"><span class="item-no">UNIT 02</span><span class="badge predict">Predict output</span><span class="topic">LOOP · CONTINUE · ACCUMULATOR</span></div>
+    <p class="brief">This script runs perfectly. Trace it carefully — watch what <code class="q-code">continue</code> does.</p>
+    <div class="code">
+      <div class="code-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="code-name">unit02_skip_sum.py</span><button class="copy" onclick="copyCode('u2')">⧉ COPY</button></div>
+<pre id="u2"><span class="ln">total = <span class="number">0</span></span><span class="ln"><span class="keyword">for</span> n <span class="keyword">in</span> <span class="builtin">range</span>(<span class="number">1</span>, <span class="number">6</span>):</span><span class="ln">    <span class="keyword">if</span> n == <span class="number">3</span>:</span><span class="ln">        <span class="keyword">continue</span></span><span class="ln">    total = total + n</span><span class="ln"><span class="builtin">print</span>(total)</span></pre>
+    </div>
+    <div class="task"><b>Your task:</b> What single number does this print? Write down what <code class="q-code">range(1, 6)</code> produces and which value gets skipped.</div>
+    <div class="answer" id="ans2">
+      <div class="answer-head">⚷ Answer Key · Unit 02</div>
+      <div class="answer-body">
+        <p><span class="lbl">THE TRACE</span><code>range(1, 6)</code> gives 1, 2, 3, 4, 5 (stops before 6). When <code>n == 3</code>, <code>continue</code> skips the rest of that loop, so 3 is <b>not</b> added.</p>
+        <p><span class="lbl">THE MATH</span>1 + 2 + 4 + 5 = 12. The <code>print</code> is outside the loop, so it only prints once at the end.</p>
+        <p><span class="lbl">CORRECT OUTPUT</span></p>
+        <div class="out">12</div>
+        <p style="margin-top:8px"><span class="lbl">COMMON WRONG ANSWERS</span><code>15</code> (forgot to skip 3), or four separate lines (thought print was inside the loop).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM 3 -->
+  <div class="item">
+    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+    <div class="item-head"><span class="item-no">UNIT 03</span><span class="badge fix">Fix the bug</span><span class="topic">SET · NO INDEXING</span></div>
+    <p class="brief">A student wants to read the first colour from a set. It crashes.</p>
+    <div class="code">
+      <div class="code-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="code-name">unit03_colours.py</span><button class="copy" onclick="copyCode('u3')">⧉ COPY</button></div>
+<pre id="u3"><span class="ln">colours = {<span class="string">"red"</span>, <span class="string">"green"</span>, <span class="string">"blue"</span>}</span><span class="ln"><span class="comment"># Check if "green" is in the set, then list them all</span></span><span class="ln"><span class="builtin">print</span>(colours[<span class="number">0</span>])</span></pre>
+    </div>
+    <div class="task"><b>Your task:</b> Why can't you use <span class="q-code">[0]</span> on a set? Fix line 3 so the script instead checks whether <span class="q-code">"green"</span> is in the set (should print <span class="q-code">True</span>).</div>
+    <div class="answer" id="ans3">
+      <div class="answer-head">⚷ Answer Key · Unit 03</div>
+      <div class="answer-body">
+        <p><span class="lbl">THE FAULT</span>Sets are <b>unordered</b> — there's no "slot 0", so you can't index them with <code>[0]</code>.</p>
+        <p><span class="lbl">ERROR SHOWN</span><code>TypeError: 'set' object is not subscriptable</code></p>
+        <p><span class="lbl">THE FIX</span>Use the <code>in</code> keyword to test membership: <code>print("green" in colours)</code>. (To see every item instead, loop: <code>for c in colours: print(c)</code>.)</p>
+        <p><span class="lbl">CORRECT OUTPUT</span></p>
+        <div class="out">True</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM 4 -->
+  <div class="item">
+    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+    <div class="item-head"><span class="item-no">UNIT 04</span><span class="badge fix">Fix the bug</span><span class="topic">FUNCTION · MISSING RETURN</span></div>
+    <p class="brief">This function should calculate the area of a rectangle, but the printout says <code class="q-code">None</code> instead of a number. No red error appears — just the wrong answer.</p>
+    <div class="code">
+      <div class="code-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="code-name">unit04_area.py</span><button class="copy" onclick="copyCode('u4')">⧉ COPY</button></div>
+<pre id="u4"><span class="ln"><span class="keyword">def</span> <span class="function">area</span>(w, h):</span><span class="ln">    w * h</span><span class="ln"></span><span class="ln">result = <span class="function">area</span>(<span class="number">4</span>, <span class="number">3</span>)</span><span class="ln"><span class="builtin">print</span>(result)</span></pre>
+    </div>
+    <div class="task"><b>Your task:</b> The maths is right but nothing comes back out of the function. Add the one missing keyword so the output is <span class="q-code">12</span>.</div>
+    <div class="answer" id="ans4">
+      <div class="answer-head">⚷ Answer Key · Unit 04</div>
+      <div class="answer-body">
+        <p><span class="lbl">THE FAULT</span>The function calculates <code>w * h</code> but never sends the answer back. With no <code>return</code>, a function hands back <code>None</code> by default — this is a <b>logic bug</b>, not a crash, which makes it sneaky.</p>
+        <p><span class="lbl">THE FIX</span>Add <code>return</code> in front of the calculation: <code>return w * h</code></p>
+        <p><span class="lbl">CORRECT OUTPUT</span></p>
+        <div class="out">12</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM 5 -->
+  <div class="item">
+    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+    <div class="item-head"><span class="item-no">UNIT 05</span><span class="badge predict">Predict output</span><span class="topic">DICT · LOOP · ACCUMULATOR</span></div>
+    <p class="brief">A working inventory system. Trace both print lines and predict each number exactly.</p>
+    <div class="code">
+      <div class="code-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="code-name">unit05_inventory.py</span><button class="copy" onclick="copyCode('u5')">⧉ COPY</button></div>
+<pre id="u5"><span class="ln">inventory = {<span class="string">"sword"</span>: <span class="number">1</span>, <span class="string">"shield"</span>: <span class="number">2</span>, <span class="string">"potion"</span>: <span class="number">3</span>}</span><span class="ln"></span><span class="ln">inventory[<span class="string">"potion"</span>] = inventory[<span class="string">"potion"</span>] + <span class="number">2</span></span><span class="ln"></span><span class="ln">total = <span class="number">0</span></span><span class="ln"><span class="keyword">for</span> item <span class="keyword">in</span> inventory:</span><span class="ln">    total = total + inventory[item]</span><span class="ln"></span><span class="ln"><span class="builtin">print</span>(inventory[<span class="string">"potion"</span>])</span><span class="ln"><span class="builtin">print</span>(total)</span></pre>
+    </div>
+    <div class="task"><b>Your task:</b> Predict <i>both</i> printed lines. Hint: line 3 changes the potion count first, then the loop adds up <b>all</b> the values.</div>
+    <div class="answer" id="ans5">
+      <div class="answer-head">⚷ Answer Key · Unit 05</div>
+      <div class="answer-body">
+        <p><span class="lbl">THE TRACE</span>Line 3 updates potion from 3 to <b>5</b> (3 + 2). The loop walks the keys and adds their values: sword 1 + shield 2 + potion 5.</p>
+        <p><span class="lbl">THE MATH</span>First print = the potion value = 5. Second print = 1 + 2 + 5 = 8.</p>
+        <p><span class="lbl">CORRECT OUTPUT</span></p>
+        <div class="out">5
+8</div>
+        <p style="margin-top:8px"><span class="lbl">COMMON WRONG ANSWER</span><code>6</code> for the total — that forgets the potion was already updated to 5 before the loop ran.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>PYTHON.SYS · FAULT-FINDING LAB · 5 UNITS · TEST IN THONNY</footer>
+</div>
+
+<script>
+let keyOn=false;
+function toggleKey(){
+  keyOn=!keyOn;
+  document.querySelectorAll('.answer').forEach(a=>a.classList.toggle('show',keyOn));
+  const b=document.getElementById('keytoggle');
+  b.classList.toggle('on',keyOn);
+  b.textContent=keyOn?'⚷ HIDE ANSWER KEY':'⚷ SHOW ANSWER KEY';
+}
+function copyCode(id){
+  // strip line-number pseudo content by reading textContent of the <pre>
+  const text=document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    const note=document.createElement('div');
+    note.textContent='COPIED ✓';
+    note.style.cssText='position:fixed;z-index:5000;font-family:IBM Plex Mono;font-weight:700;color:var(--cyan);font-size:.9rem;left:50%;top:80px;transform:translateX(-50%);animation:rise .3s both';
+    document.body.appendChild(note);setTimeout(()=>note.remove(),900);
+  }).catch(()=>alert('Code copied — paste into Thonny.'));
+}
+</script>
+</body>
+</html>
